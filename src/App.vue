@@ -32,7 +32,7 @@ const finalMarkdown = ref(null)
 function handleInput(e) { userInput.value = e.target.value }
 async function handleDrop(e) {
     const textarea = e.target
-    const droppedText = e.dataTransfer.getData('text/plain')
+    const droppedText = e.dataTransfer.getData('text/plain').trim()
     if (isUUID(droppedText)) {
         try {
             const res = await Promise.race([
