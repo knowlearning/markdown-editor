@@ -8,6 +8,11 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
+  build: {
+    rollupOptions: {
+      external: ['dompurify']
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
