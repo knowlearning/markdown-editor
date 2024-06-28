@@ -68,7 +68,7 @@ async function handleDrop(e) {
             userInput.value = userInput.value + toAppend
             textarea.value = userInput.value
         } catch {
-            console.log('catching!')
+            console.log('catching!!')
         }
   }
 }
