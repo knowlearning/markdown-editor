@@ -61,7 +61,7 @@ async function handleDrop(e) {
             if (typeName === 'image') {
                 toAppend = `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
             } else if (typeName === 'audio') {
-                toAppend = `\n\n<audio controls>\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the audio element.\n</audio>`
+                toAppend = `\n\n<audio controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the audio element.\n</audio>`
             }
 
             userInput.value = userInput.value.replace(droppedText, '')
