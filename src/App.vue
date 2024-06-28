@@ -9,6 +9,7 @@
                 :value="userInput"
             />
         </div>
+        <!-- RENDER OUR Draggable PREVIEWS For Auiod / Image -->
 
         <div class="right-col">
             <div class="markdown" v-html="finalMarkdown"></div>
@@ -29,19 +30,40 @@ import defaultMarkdown from './helpers/defaultMarkdown.js'
 const userInput = ref(defaultMarkdown)
 const finalMarkdown = ref(null)
 
+const contentList = ref(JSON.parse(localStorage.getItem('my-content')) || [])
+
+
 function handleInput(e) { userInput.value = e.target.value }
 async function handleDrop(e) {
     const textarea = e.target
     const droppedText = e.dataTransfer.getData('text/plain').trim()
     if (isUUID(droppedText)) {
         try {
+            addToLS(droppedText)
+
+            const { active_type } = await Agent.metadata(droppedText)
+            let typeName = null
+            if (active_type.startsWith('audio')) typeName = 'audio'
+            else if (active_type.startsWith('image')) typeName = 'image'
+            else {
+                alert('uuid not found or not image or audio')
+                return
+            }
+
             const res = await Promise.race([
                 Agent.download(droppedText),
                 new Promise((resolve, reject) => {
                     setTimeout(() => reject(new Error('Timeout')), 2000);
                 })
             ]);
-            const toAppend = `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
+
+            let toAppend = ''
+            if (typeName === 'image') {
+                toAppend = `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
+            } else if (typeName === 'audio') {
+                toAppend = `\n\n<audio controls>\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the audio element.\n</audio>`
+            }
+
             userInput.value = userInput.value.replace(droppedText, '')
             userInput.value = userInput.value + toAppend
             textarea.value = userInput.value
@@ -60,6 +82,26 @@ watch(
     },
     { immediate: true }
 )
+
+
+
+function addToLS(uuid) {
+    const myContent = JSON.parse(localStorage.getItem('my-content')) || []
+    if (myContent.includes(uuid)) return
+
+    myContent.push(uuid)
+    contentList.value.push(uuid)
+    localStorage.setItem('my-content', JSON.stringify(myContent))
+}
+
+function deleteFromLS(uuid) {
+    const myContent = JSON.parse(localStorage.getItem('my-content') || []) || []
+    myContent.filter(el => el !== uuid)
+
+
+    localStorage.setItem('my-content', JSON.stringify(myContent))
+}
+
 
 </script>
 
