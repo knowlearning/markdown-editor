@@ -12,7 +12,7 @@
         <!-- RENDER OUR Draggable PREVIEWS For Auiod / Image -->
 
         <div class="right-col">
-            <div class="markdown" v-html="finalMarkdown"></div>
+            <div class="markdown" v-html="sanitizedMarkdown"></div>
         </div>
 
     </div>
@@ -28,7 +28,7 @@ import replaceUUIDs from './helpers/replaceUUIDs.js'
 import defaultMarkdown from './helpers/defaultMarkdown.js'
 
 const userInput = ref(defaultMarkdown)
-const finalMarkdown = ref(null)
+const sanitizedMarkdown = ref(null)
 
 const contentList = ref(JSON.parse(localStorage.getItem('my-content')) || [])
 
@@ -76,9 +76,10 @@ async function handleDrop(e) {
 watch(
     userInput,
     async val => {
-        const rawMarkdown = marked.parse(val)
-        const sanitized = DOMPurify.sanitize(rawMarkdown)
-        finalMarkdown.value = renderLatex(sanitized)
+        // sanitizedMarkdown.value = renderLatex(val)
+        const katex = renderLatex(val)
+        const md = marked.parse(katex)
+        sanitizedMarkdown.value = DOMPurify.sanitize(md)
     },
     { immediate: true }
 )
