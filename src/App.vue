@@ -1,11 +1,10 @@
 <template>
     <div class="wrapper">
         <div class="left-col">
-            <h3>Your Markdown</h3>
-            <textarea
-                @input="handleInput"
-                @drop="handleDrop"
-                :value="userInput"
+            <MarkdownInput
+                :userInput="userInput"
+                @input="userInput = $event"
+                @addUUID="addUUID"
             />
             <UUIDList
                 :uuids="contentList"
@@ -23,11 +22,11 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { marked } from 'marked'
-import { validate as isUUID } from 'uuid'
 import DOMPurify from 'DOMPurify'
 import renderLatex from './helpers/renderLatex.js'
 import replaceUUIDs from './helpers/replaceUUIDs.js'
 import defaultMarkdown from './helpers/defaultMarkdown.js'
+import MarkdownInput from './components/MarkdownInput.vue'
 import UUIDList from './components/UUIDList.vue'
 
 const userInput = ref(defaultMarkdown)
@@ -35,47 +34,44 @@ const sanitizedMarkdown = ref(null)
 
 const contentList = ref(JSON.parse(localStorage.getItem('my-content')) || [])
 
+// async function handleDrop(e) {
+//     const textarea = e.target
+//     const droppedText = e.dataTransfer.getData('text/plain').trim()
+//     if (isUUID(droppedText)) {
+//         try {
+//             const { active_type } = await Agent.metadata(droppedText)
+//             let typeName = null
+//             if (active_type.startsWith('audio')) typeName = 'audio'
+//             else if (active_type.startsWith('image')) typeName = 'image'
+//             else {
+//                 alert('uuid not found or not image or audio')
+//                 return
+//             }
 
-function handleInput(e) { userInput.value = e.target.value }
+//             addUUID(droppedText) // add to localStorage
 
-async function handleDrop(e) {
-    const textarea = e.target
-    const droppedText = e.dataTransfer.getData('text/plain').trim()
-    if (isUUID(droppedText)) {
-        try {
-            const { active_type } = await Agent.metadata(droppedText)
-            let typeName = null
-            if (active_type.startsWith('audio')) typeName = 'audio'
-            else if (active_type.startsWith('image')) typeName = 'image'
-            else {
-                alert('uuid not found or not image or audio')
-                return
-            }
+//             const res = await Promise.race([
+//                 Agent.download(droppedText),
+//                 new Promise((resolve, reject) => {
+//                     setTimeout(() => reject(new Error('Timeout')), 2000);
+//                 })
+//             ]);
 
-            addUUID(droppedText) // add to localStorage
+//             let toAppend = ''
+//             if (typeName === 'image') {
+//                 toAppend = `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
+//             } else if (typeName === 'audio') {
+//                 toAppend = `\n\n<audio controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the audio element.\n</audio>`
+//             }
 
-            const res = await Promise.race([
-                Agent.download(droppedText),
-                new Promise((resolve, reject) => {
-                    setTimeout(() => reject(new Error('Timeout')), 2000);
-                })
-            ]);
-
-            let toAppend = ''
-            if (typeName === 'image') {
-                toAppend = `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
-            } else if (typeName === 'audio') {
-                toAppend = `\n\n<audio controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the audio element.\n</audio>`
-            }
-
-            userInput.value = userInput.value.replace(droppedText, '')
-            userInput.value = userInput.value + toAppend
-            textarea.value = userInput.value
-        } catch {
-            console.log('catching!!')
-        }
-  }
-}
+//             userInput.value = userInput.value.replace(droppedText, '')
+//             userInput.value = userInput.value + toAppend
+//             textarea.value = userInput.value
+//         } catch {
+//             console.log('catching!!')
+//         }
+//   }
+// }
 
 watch(
     userInput,
@@ -88,12 +84,9 @@ watch(
     { immediate: true }
 )
 
-
-
 function addUUID(uuid) {
     const myContent = JSON.parse(localStorage.getItem('my-content')) || []
     if (myContent.includes(uuid)) return
-
     myContent.push(uuid)
     contentList.value.push(uuid)
     localStorage.setItem('my-content', JSON.stringify(myContent))
