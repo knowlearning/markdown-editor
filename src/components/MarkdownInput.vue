@@ -37,7 +37,7 @@ async function handleAttemptedDrop(e) {
             }
             emit('addUUID', droppedText)
         } catch {
-            console.log('catching!!')
+            console.warn('catching!!')
         }
   }
 }
