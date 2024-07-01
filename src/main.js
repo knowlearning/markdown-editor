@@ -1,9 +1,12 @@
 import './assets/main.css'
 
 import { createApp } from 'vue'
-import App from './App.vue'
+import Main from './Main.vue'
 import Agent from '@knowlearning/agents'
 
 window.Agent = Agent
 
-createApp(App).mount('#app')
+const { auth: { provider }} = await Agent.environment()
+
+if (provider === 'anonymous') Agent.login()
+else createApp(Main).mount('#app')

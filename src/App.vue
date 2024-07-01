@@ -1,11 +1,20 @@
 <template>
     <div class="wrapper">
         <div class="left-col">
+            <button @click="newDoc">New Markdown</button>
+            <select v-if="Object.keys(markdownDocs).length " v-model="activeMarkdownId">
+                <option v-for="_, id in markdownDocs" :key="id" :value="id">
+                    {{ id }}
+                </option>
+            </select>
+
             <MarkdownInput
+                :key="activeMarkdownId" v-if="activeMarkdownId"
                 :userInput="userInput"
                 @input="userInput = $event"
                 @addUUID="addUUID"
             />
+            <button :disabled="!activeMarkdownId" @click="save">Save</button>
             <UUIDList
                 :uuids="contentList"
                 @remove="removeUUID"
@@ -20,15 +29,41 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import { v4 as uuid } from 'uuid'
 import MarkdownInput from './components/MarkdownInput.vue'
 import UUIDList from './components/UUIDList.vue'
 import ProcessMarkdown from './components/ProcessMarkdown.vue'
 
 import defaultMarkdown from './helpers/defaultMarkdown.js'
 
-const userInput = ref(defaultMarkdown)
+const userInput = ref('')
+
 const contentList = ref(JSON.parse(localStorage.getItem('my-content')) || [])
+
+const markdownDocs = reactive(await Agent.state('markdown-docs'))
+const activeMarkdownId = ref(null)
+
+watch(
+    () => activeMarkdownId.value,
+    async val => {
+        const state = await Agent.state(val)
+        userInput.value = state.userInput
+    }
+)
+
+async function save() {
+    const state = await Agent.state(activeMarkdownId.value)
+    state.userInput = userInput.value
+}
+
+async function newDoc() {
+    const id = uuid()
+    const state = await Agent.state(id)
+    state.userInput = defaultMarkdown
+    markdownDocs[id] = {}
+    activeMarkdownId.value = id
+}
 
 function addUUID(uuid) {
     const myContent = JSON.parse(localStorage.getItem('my-content')) || []
