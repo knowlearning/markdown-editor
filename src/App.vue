@@ -1,6 +1,5 @@
 <template>
     <div class="wrapper">
-
         <div class="left-col">
             <h3>Your Markdown</h3>
             <textarea
@@ -8,26 +7,11 @@
                 @drop="handleDrop"
                 :value="userInput"
             />
-            <div class="uuids">
-                <div
-                    v-for="el in contentList"
-                    :key="el"
-
-                >
-                    <span
-                        style="color: red; cursor: pointer;"
-                        @click="removeUUID(el)"
-                    >XXXXX</span>
-                    <span
-                        draggable="true"
-                        @dragstart="setDragData($event, el)"
-                    >{{ el }}</span>
-                </div>
-            </div>
-
-
+            <UUIDList
+                :uuids="contentList"
+                @remove="removeUUID"
+            />
         </div>
-        <!-- RENDER OUR Draggable PREVIEWS For Auiod / Image -->
 
         <div class="right-col">
             <div class="markdown" v-html="sanitizedMarkdown"></div>
@@ -44,6 +28,7 @@ import DOMPurify from 'DOMPurify'
 import renderLatex from './helpers/renderLatex.js'
 import replaceUUIDs from './helpers/replaceUUIDs.js'
 import defaultMarkdown from './helpers/defaultMarkdown.js'
+import UUIDList from './components/UUIDList.vue'
 
 const userInput = ref(defaultMarkdown)
 const sanitizedMarkdown = ref(null)
@@ -52,6 +37,7 @@ const contentList = ref(JSON.parse(localStorage.getItem('my-content')) || [])
 
 
 function handleInput(e) { userInput.value = e.target.value }
+
 async function handleDrop(e) {
     const textarea = e.target
     const droppedText = e.dataTransfer.getData('text/plain').trim()
@@ -66,7 +52,7 @@ async function handleDrop(e) {
                 return
             }
 
-            addUUID(droppedText)
+            addUUID(droppedText) // add to localStorage
 
             const res = await Promise.race([
                 Agent.download(droppedText),
@@ -117,13 +103,6 @@ function removeUUID(uuid) {
     contentList.value = contentList.value.filter(el => el !== uuid)
     localStorage.setItem('my-content', JSON.stringify(contentList.value))
 }
-
-function setDragData(event, id) {
-  event.dataTransfer.setData('text/plain', id)
-  event.dataTransfer.setData('text/uri-list', id)
-}
-
-
 </script>
 
 <style>
