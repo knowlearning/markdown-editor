@@ -8,6 +8,24 @@
                 @drop="handleDrop"
                 :value="userInput"
             />
+            <div class="uuids">
+                <div
+                    v-for="el in contentList"
+                    :key="el"
+
+                >
+                    <span
+                        style="color: red; cursor: pointer;"
+                        @click="removeUUID(el)"
+                    >XXXXX</span>
+                    <span
+                        draggable="true"
+                        @dragstart="setDragData($event, el)"
+                    >{{ el }}</span>
+                </div>
+            </div>
+
+
         </div>
         <!-- RENDER OUR Draggable PREVIEWS For Auiod / Image -->
 
@@ -39,8 +57,6 @@ async function handleDrop(e) {
     const droppedText = e.dataTransfer.getData('text/plain').trim()
     if (isUUID(droppedText)) {
         try {
-            addToLS(droppedText)
-
             const { active_type } = await Agent.metadata(droppedText)
             let typeName = null
             if (active_type.startsWith('audio')) typeName = 'audio'
@@ -49,6 +65,8 @@ async function handleDrop(e) {
                 alert('uuid not found or not image or audio')
                 return
             }
+
+            addUUID(droppedText)
 
             const res = await Promise.race([
                 Agent.download(droppedText),
@@ -86,7 +104,7 @@ watch(
 
 
 
-function addToLS(uuid) {
+function addUUID(uuid) {
     const myContent = JSON.parse(localStorage.getItem('my-content')) || []
     if (myContent.includes(uuid)) return
 
@@ -95,12 +113,14 @@ function addToLS(uuid) {
     localStorage.setItem('my-content', JSON.stringify(myContent))
 }
 
-function deleteFromLS(uuid) {
-    const myContent = JSON.parse(localStorage.getItem('my-content') || []) || []
-    myContent.filter(el => el !== uuid)
+function removeUUID(uuid) {
+    contentList.value = contentList.value.filter(el => el !== uuid)
+    localStorage.setItem('my-content', JSON.stringify(contentList.value))
+}
 
-
-    localStorage.setItem('my-content', JSON.stringify(myContent))
+function setDragData(event, id) {
+  event.dataTransfer.setData('text/plain', id)
+  event.dataTransfer.setData('text/uri-list', id)
 }
 
 
@@ -127,7 +147,7 @@ function deleteFromLS(uuid) {
 }
 .left-col textarea {
     width: 100%;
-    height: 100%;
+    height: 350px;
 
 }
 </style>
