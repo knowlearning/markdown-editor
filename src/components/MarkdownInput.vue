@@ -10,7 +10,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
 import { validate as isUUID } from 'uuid'
 
 const emit = defineEmits([ 'input', 'addUUID' ])
@@ -29,12 +28,14 @@ async function handleAttemptedDrop(e) {
         try {
             const { active_type } = await Agent.metadata(droppedText)
             let typeName = null
-            if (active_type.startsWith('audio')) typeName = 'audio'
-            else if (active_type.startsWith('image')) typeName = 'image'
-            else {
-                alert('uuid not found or not image or audio')
+            const supportedTypePrefixes = [ 'audio', 'image', 'video' ]
+            supportedTypePrefixes.forEach(type => {
+                if (active_type.startsWith(type)) typeName = type
+            })
+            if (!typeName) { // if none set above
+                alert('uuid not found or not supported type')
                 return
-            }
+            }            
             emit('addUUID', droppedText)
         } catch {
             console.warn('catching!!')

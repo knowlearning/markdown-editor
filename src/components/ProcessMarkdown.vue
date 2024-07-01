@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps } from 'vue'
+import { ref, watch } from 'vue'
 
 import { marked } from 'marked'
 import DOMPurify from 'DOMPurify'
@@ -40,9 +40,11 @@ async function replacer(match) {
         // metadata call is cached, fine to fetch on each keystroke
         const { active_type } = await Agent.metadata(uuid)
         let typeName = null
-        if (active_type.startsWith('audio')) typeName = 'audio'
-        else if (active_type.startsWith('image')) typeName = 'image'
-        else return uuid
+        const supportedTypePrefixes = [ 'audio', 'image', 'video' ]
+        supportedTypePrefixes.forEach(type => {
+            if (active_type.startsWith(type)) typeName = type
+        })
+        if (!typeName) return uuid // return uuid if type match not found
 
         // TODO: make a dictionary of uuids to url to prevent refecthing on each keystroke
 
@@ -52,11 +54,10 @@ async function replacer(match) {
                 setTimeout(() => reject(new Error('Timeout')), 2000);
             })
         ])
-
         if (typeName === 'image') {
             return `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
-        } else if (typeName === 'audio') {
-            return `\n\n<audio controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the audio element.\n</audio>`
+        } else if (typeName === 'audio' || typeName === 'video') {
+            return `\n\n<${typeName} controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the ${typeName} element.\n</${typeName}>`
         }
     } catch {
         console.warn('catching!!')

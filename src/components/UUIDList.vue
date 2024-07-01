@@ -5,9 +5,9 @@
             :key="uuid"
         >
             <span
-                style="color: red; cursor: pointer;"
+                style="color: red; cursor: pointer; margin: 3px 12px;"
                 @click="$emit('remove', uuid)"
-            >XXXXX</span>
+            >x</span>
             <span
                 draggable="true"
                 @dragstart="setDragData($event, uuid)"
@@ -17,8 +17,6 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
-
 const props = defineProps({
     uuids: {
         type: Array,
