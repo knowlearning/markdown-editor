@@ -35,7 +35,7 @@ async function handleAttemptedDrop(e) {
             if (!typeName) { // if none set above
                 alert('uuid not found or not supported type')
                 return
-            }            
+            }
             emit('addUUID', droppedText)
         } catch {
             console.warn('catching!!')

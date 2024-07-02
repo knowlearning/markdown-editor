@@ -26,16 +26,19 @@ const sanitizedMarkdown = ref('')
 watch(
     () => props.userInput,
     async val => {
-        const katex = renderLatex(val)
+        const withIDsReplaced = await replaceUUIDs(val, replacer)
+        const katex = renderLatex(withIDsReplaced)
         const md = marked.parse(katex)
-        const withIDsReplaced = await replaceUUIDs(md, replacer)
-        sanitizedMarkdown.value = DOMPurify.sanitize(withIDsReplaced)
+        sanitizedMarkdown.value = DOMPurify.sanitize(md)
     },
     { immediate: true }
 )
 
-async function replacer(match) {
-    const uuid = match[0]
+async function replacer(uuid, optionsStr) {
+    let options = {}
+    try { options = JSON.parse(optionsStr) }
+    catch (e) { }
+
     try {
         // metadata call is cached, fine to fetch on each keystroke
         const { active_type } = await Agent.metadata(uuid)
@@ -55,9 +58,13 @@ async function replacer(match) {
             })
         ])
         if (typeName === 'image') {
-            return `\n\n<img height="200px;" width="200px;" src="${res?.url}">`
+            const height = options.height || '100px'
+            const width = options.width || '100px'
+            return `\n\n<img height="${height};" width="${width};" src="${res?.url}">`
         } else if (typeName === 'audio' || typeName === 'video') {
-            return `\n\n<${typeName} controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the ${typeName} element.\n</${typeName}>`
+            const height = options.height || '225px'
+            const width = options.width || '300px'
+            return `\n\n<${typeName} height="${height};" width="${width};" controls controlsList="nodownload noplaybackrate">\n<source src="${res?.url}" type="${active_type}">\nYour browser does not support the ${typeName} element.\n</${typeName}>`
         }
     } catch {
         console.warn('catching!!')
