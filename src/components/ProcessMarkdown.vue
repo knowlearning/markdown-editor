@@ -58,8 +58,8 @@ async function replacer(uuid, optionsStr) {
             })
         ])
         if (typeName === 'image') {
-            const height = options.height || '100px'
-            const width = options.width || '100px'
+            const height = options.height ? options.height + 'px' : '100px'
+            const width = options.width ? options.width + 'px' : '100px'
             return `\n\n<img height="${height};" width="${width};" src="${res?.url}">`
         } else if (typeName === 'audio' || typeName === 'video') {
             const height = options.height || '225px'
